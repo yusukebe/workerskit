@@ -29,11 +29,16 @@
     "build": "bun run build:js && bun run build:dts",
     "build:js": "bun build ./src/index.ts ./src/dev.ts ./src/prod.ts --outdir=./dist --format=esm --target=browser --external @cloudflare/worker-bundler",
     "build:dts": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+    "test": "bun run test:fixtures && vitest",
+    "test:fixtures": "bun build ./test/fixtures/routes/*.ts --outdir=./test/prod/routes --format=esm --target=browser",
     "release": "bun run build && np"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.15.2",
     "@cloudflare/workers-types": "^4.20260430.1",
+    "hono": "^4.12.16",
     "np": "^11.2.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }

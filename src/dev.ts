@@ -11,7 +11,7 @@ const makeLoad = (options: DevOptions) => {
     if (!tsRes.ok) {
       return null
     }
-    const source = await tsRes.text()
+    const source = new TextDecoder().decode(await tsRes.arrayBuffer())
     const hash = await sha256(source)
 
     return env.LOADER.get(`${routeName}:${hash}`, async () => {
