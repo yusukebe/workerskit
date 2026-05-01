@@ -1,4 +1,4 @@
-import { makeHandler, type WorkersKitBindings } from './shared.js'
+import { makeHandler, type WorkerKitBindings } from './shared.js'
 
 export interface ProdOptions {
   dir?: string
@@ -7,7 +7,7 @@ export interface ProdOptions {
 const makeLoad = (options: ProdOptions) => {
   const dir = options.dir ?? ''
   const prefix = dir ? `${dir}/` : ''
-  return async (env: WorkersKitBindings, routeName: string) => {
+  return async (env: WorkerKitBindings, routeName: string) => {
     const path = `${prefix}${routeName}.js`
     const head = await env.ASSETS.fetch(new Request(`http://dummy/${path}`, { method: 'HEAD' }))
     if (!head.ok) {

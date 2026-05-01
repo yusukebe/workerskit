@@ -1,4 +1,4 @@
-# workerskit
+# workerkit
 
 A file-based routing framework for Cloudflare Workers. Each route file runs as an **independent Dynamic Worker** — fully isolated, loaded via the Worker Loader binding.
 
@@ -38,11 +38,11 @@ The host Worker dispatches by the first path segment (`/users/123` → `users.ts
 
 ### Dev: zero build step
 
-`workerskit/dev` runtime-bundles `routes/*.ts` via `@cloudflare/worker-bundler` on first request. Edit a route and it's reflected immediately (LOADER cache is keyed by source hash).
+`workerkit/dev` runtime-bundles `routes/*.ts` via `@cloudflare/worker-bundler` on first request. Edit a route and it's reflected immediately (LOADER cache is keyed by source hash).
 
 ```ts
 // src/dev.ts
-import { dev } from 'workerskit/dev'
+import { dev } from 'workerkit/dev'
 import pkg from '../package.json'
 
 export default dev({ dependencies: pkg.dependencies })
@@ -52,17 +52,17 @@ export default dev({ dependencies: pkg.dependencies })
 
 ### Prod: pre-built, tiny host
 
-`workerskit/prod` reads pre-built `.js` bundles from the assets directory. The host worker is **~1.6 KiB** — `@cloudflare/worker-bundler` is fully tree-shaken out.
+`workerkit/prod` reads pre-built `.js` bundles from the assets directory. The host worker is **~1.6 KiB** — `@cloudflare/worker-bundler` is fully tree-shaken out.
 
 ```ts
 // src/prod.ts
-export { default } from 'workerskit/prod'
+export { default } from 'workerkit/prod'
 ```
 
 Or with options:
 
 ```ts
-import { prod } from 'workerskit/prod'
+import { prod } from 'workerkit/prod'
 export default prod({ dir: 'subdir' })  // fetches subdir/<name>.js via ASSETS
 ```
 
@@ -113,7 +113,7 @@ bun run dev
 
 | | dev | prod |
 |---|---|---|
-| Host entry | `src/dev.ts` (`workerskit/dev`) | `src/prod.ts` (`workerskit/prod`) |
+| Host entry | `src/dev.ts` (`workerkit/dev`) | `src/prod.ts` (`workerkit/prod`) |
 | Route source on disk | `routes/<name>.ts` | `dist/<name>.js` (built) |
 | ASSETS binding directory | `routes` | `dist` (via `--assets dist`) |
 | Bundling | runtime via `@cloudflare/worker-bundler` | build-time via `bun build` |

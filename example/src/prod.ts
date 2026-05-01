@@ -1,1 +1,1 @@
-export { default } from 'workerskit/prod'
+export { default } from 'workerkit/prod'

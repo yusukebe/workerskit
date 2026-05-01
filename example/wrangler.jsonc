@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "workerskit-example",
+  "name": "workerkit-example",
   "main": "src/dev.ts",
   "assets": {
     "directory": "routes",

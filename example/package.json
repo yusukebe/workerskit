@@ -1,5 +1,5 @@
 {
-  "name": "workerskit-example",
+  "name": "workerkit-example",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "hono": "^4.7.0",
-    "workerskit": "file:.."
+    "workerkit": "file:.."
   },
   "devDependencies": {
     "typescript": "^6.0.3",

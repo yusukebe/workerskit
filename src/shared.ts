@@ -1,11 +1,11 @@
-export interface WorkersKitBindings {
+export interface WorkerKitBindings {
   ASSETS: Fetcher
   LOADER: WorkerLoader
 }
 
 export function makeHandler(
-  load: (env: WorkersKitBindings, routeName: string) => Promise<WorkerStub | null>
-): ExportedHandler<WorkersKitBindings> {
+  load: (env: WorkerKitBindings, routeName: string) => Promise<WorkerStub | null>
+): ExportedHandler<WorkerKitBindings> {
   return {
     async fetch(request, env) {
       const url = new URL(request.url)

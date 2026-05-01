@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { SELF } from 'cloudflare:test'
 
-describe('workerskit/dev', () => {
+describe('workerkit/dev', () => {
   it('serves the index route at /', async () => {
     const res = await SELF.fetch('http://test/')
     expect(res.status).toBe(404) // no index fixture, falls through

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { SELF } from 'cloudflare:test'
 
-describe('workerskit/prod', () => {
+describe('workerkit/prod', () => {
   it('serves /hello from pre-built bundle', async () => {
     const res = await SELF.fetch('http://test/hello')
     expect(res.status).toBe(200)
