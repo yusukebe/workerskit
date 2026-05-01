@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "workerkit",
+      "name": "workers-routes",
       "dependencies": {
         "@cloudflare/worker-bundler": "^0.1.3",
       },

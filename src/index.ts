@@ -1,1 +1,1 @@
-export type { WorkerKitBindings } from './shared.js'
+export type { WorkersRoutesBindings } from './shared.js'

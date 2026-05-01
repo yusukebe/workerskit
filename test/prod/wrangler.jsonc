@@ -1,5 +1,5 @@
 {
-  "name": "workerkit-test-prod",
+  "name": "workers-routes-test-prod",
   "main": "./worker.ts",
   "compatibility_date": "2026-03-17",
   "assets": {

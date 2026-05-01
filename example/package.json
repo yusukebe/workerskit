@@ -1,5 +1,5 @@
 {
-  "name": "workerkit-example",
+  "name": "workers-routes-example",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "hono": "^4.7.0",
-    "workerkit": "file:.."
+    "workers-routes": "file:.."
   },
   "devDependencies": {
     "typescript": "^6.0.3",
