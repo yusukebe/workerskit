@@ -29,8 +29,7 @@
     "build": "bun run build:js && bun run build:dts",
     "build:js": "bun build ./src/index.ts ./src/dev.ts ./src/prod.ts --outdir=./dist --format=esm --target=browser --external @cloudflare/worker-bundler",
     "build:dts": "tsc --emitDeclarationOnly -p tsconfig.build.json",
-    "prepublishOnly": "bun run build",
-    "release": "np"
+    "release": "bun run build && np"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260430.1",
