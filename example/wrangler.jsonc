@@ -1,9 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kakera-example",
-  "main": "src/dev.ts",
+  "main": "src/app.ts",
+  "build": {
+    "command": "bun run build",
+    "watch_dir": "routes"
+  },
   "assets": {
-    "directory": "routes",
+    "directory": "dist",
     "binding": "ASSETS"
   },
   "worker_loaders": [

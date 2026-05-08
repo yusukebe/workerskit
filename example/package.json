@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "bun build ./routes/*.ts --outdir=./dist --target=browser --format=esm --minify",
-    "deploy": "bun run build && wrangler deploy src/prod.ts --assets dist",
+    "build": "bun run build.ts",
+    "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

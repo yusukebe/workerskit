@@ -7,17 +7,6 @@ export default defineConfig({
       {
         plugins: [
           cloudflareTest({
-            wrangler: { configPath: './test/dev/wrangler.jsonc' }
-          })
-        ],
-        test: {
-          name: 'dev',
-          include: ['test/dev/**/*.test.ts']
-        }
-      },
-      {
-        plugins: [
-          cloudflareTest({
             wrangler: { configPath: './test/prod/wrangler.jsonc' }
           })
         ],

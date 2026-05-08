@@ -21,8 +21,8 @@ my-app/
     users.ts        # /users/*
     posts.ts        # /posts/*
   src/
-    dev.ts          # dev entry — uses runtime bundler, no build step
-    prod.ts         # prod entry — uses pre-built routes
+    app.ts          # host worker entry
+  build.ts          # bun build script
   wrangler.jsonc
   package.json
 ```
@@ -42,60 +42,63 @@ export default app
 
 The host Worker dispatches by the first path segment (`/users/123` → `users.ts`, then forwards `/123`). Routes are sandboxed from each other.
 
-## Two modes
-
-### Dev: zero build step
-
-`kakera-worker/dev` runtime-bundles `routes/*.ts` via `@cloudflare/worker-bundler` on first request. Edit a route and it's reflected immediately (LOADER cache is keyed by source hash).
+## Host worker
 
 ```ts
-// src/dev.ts
-import { dev } from 'kakera-worker/dev'
-import pkg from '../package.json'
-
-export default dev({ dependencies: pkg.dependencies })
+// src/app.ts
+export { app as default } from 'kakera-worker'
 ```
 
-`dependencies` flows into the bundler so route imports (`hono`, etc.) resolve.
-
-By default, both `routes/<name>.ts` and `routes/<name>.tsx` are picked up. Override with `extensions`:
+That's it. Or with options:
 
 ```ts
-dev({
-  dependencies: pkg.dependencies,
-  extensions: ['ts', 'tsx', 'mts']
+import { kakera } from 'kakera-worker'
+export default kakera({ dir: 'subdir' }) // fetches subdir/<name>.js via ASSETS
+```
+
+`extensions` option (default `['js']`):
+
+```ts
+kakera({ extensions: ['js', 'mjs'] })
+```
+
+## Build script
+
+`build.ts` uses Bun's `Glob` API so route discovery is shell-independent and works whether you have only `.ts`, only `.tsx`, or both:
+
+```ts
+// build.ts
+import { Glob } from 'bun'
+
+const entrypoints = [...new Glob('routes/*.{ts,tsx}').scanSync('.')]
+
+const result = await Bun.build({
+  entrypoints,
+  outdir: './dist',
+  target: 'browser',
+  format: 'esm'
 })
-```
 
-### Prod: pre-built, tiny host
-
-`kakera-worker/prod` reads pre-built `.js` bundles from the assets directory. The host worker is **~1.6 KiB** — `@cloudflare/worker-bundler` is fully tree-shaken out.
-
-```ts
-// src/prod.ts
-export { default } from 'kakera-worker/prod'
-```
-
-Or with options:
-
-```ts
-import { prod } from 'kakera-worker/prod'
-export default prod({ dir: 'subdir' }) // fetches subdir/<name>.js via ASSETS
-```
-
-Same `extensions` option as dev (default `['js']`):
-
-```ts
-prod({ extensions: ['js', 'mjs'] })
+if (!result.success) {
+  for (const log of result.logs) console.error(log)
+  process.exit(1)
+}
 ```
 
 ## Wrangler config
 
+Routes are pre-bundled per-file by `bun build`, and the output directory is served via the ASSETS binding. Wrangler's `[build]` runs the bundler on startup and re-runs it when `watch_dir` changes — `wrangler dev` is the only command you need.
+
 ```jsonc
 // wrangler.jsonc
 {
-  "main": "src/dev.ts",
-  "assets": { "directory": "routes", "binding": "ASSETS" },
+  "name": "my-app",
+  "main": "src/app.ts",
+  "build": {
+    "command": "bun run build",
+    "watch_dir": "routes"
+  },
+  "assets": { "directory": "dist", "binding": "ASSETS" },
   "worker_loaders": [{ "binding": "LOADER" }],
   "compatibility_date": "2026-03-17"
 }
@@ -107,15 +110,14 @@ prod({ extensions: ['js', 'mjs'] })
 {
   "scripts": {
     "dev": "wrangler dev",
-    "build": "bun build ./routes/*.ts --outdir=./dist --target=browser --format=esm --minify",
-    "deploy": "bun run build && wrangler deploy src/prod.ts --assets dist"
+    "build": "bun run build.ts",
+    "deploy": "wrangler deploy"
   }
 }
 ```
 
-- `wrangler dev` — starts workerd with `src/dev.ts` as main, ASSETS serves source `.ts` files
-- `bun run build` — bundles each route to `dist/<name>.js` (per-route, hono inlined)
-- `bun run deploy` — builds, then deploys `src/prod.ts` overriding `--assets` to point at `dist/`
+- `wrangler dev` — runs `[build].command` (= `bun run build`), then starts workerd. Edits in `routes/` trigger a re-bundle and reload.
+- `wrangler deploy` — same flow, but ships to Cloudflare.
 
 ## Try the example
 
@@ -128,24 +130,24 @@ bun run dev
 ## Why
 
 - **Isolation by default.** Each route is its own Worker — bugs, deps, and runtime crashes can't leak between routes.
-- **No build step in dev.** Edit `routes/*.ts` and refresh.
-- **Tiny prod bundle.** `@cloudflare/worker-bundler` (~14 MiB with esbuild-wasm) lives only in dev — never shipped to production.
+- **Tiny host bundle.** The host worker is ~1.6 KiB. No runtime bundler shipped.
+- **Standard tooling.** Bundling is `bun build`. Watch-and-rebuild is Wrangler's `[build]`. Nothing magic.
 - **Per-route bindings (planned).** Each route can eventually have its own scoped set of bindings.
 
 ## How it works
 
-|                          | dev                                          | prod                                 |
-| ------------------------ | -------------------------------------------- | ------------------------------------ |
-| Host entry               | `src/dev.ts` (`kakera-worker/dev`)           | `src/prod.ts` (`kakera-worker/prod`) |
-| Route source on disk     | `routes/<name>.ts`                           | `dist/<name>.js` (built)             |
-| ASSETS binding directory | `routes`                                     | `dist` (via `--assets dist`)         |
-| Bundling                 | runtime via `@cloudflare/worker-bundler`     | build-time via `bun build`           |
-| LOADER cache key         | `<name>:<sha256(source)>` (auto-invalidates) | `<name>`                             |
-| Host bundle size         | includes worker-bundler                      | ~1.6 KiB                             |
+| Step                     |                                                                          |
+| ------------------------ | ------------------------------------------------------------------------ |
+| Host entry               | `src/app.ts` (re-exports `app` from `kakera-worker`)                     |
+| Route source on disk     | `routes/<name>.ts(x)` → `dist/<name>.js` (built by `build.ts`)           |
+| ASSETS binding directory | `dist`                                                                   |
+| Bundling                 | `bun build` invoked by Wrangler `[build]` on startup and on file changes |
+| LOADER cache key         | `<name>` (Worker Loader binding caches by key)                           |
+| Host bundle size         | ~1.6 KiB                                                                 |
 
 ## References
 
 - [Dynamic Workers](https://developers.cloudflare.com/dynamic-workers/)
 - [Worker Loader binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/)
-- [`@cloudflare/worker-bundler`](https://www.npmjs.com/package/@cloudflare/worker-bundler)
+- [Wrangler custom builds](https://developers.cloudflare.com/workers/wrangler/configuration/#custom-builds)
 - [Hono](https://hono.dev/)

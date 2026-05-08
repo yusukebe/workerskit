@@ -1,3 +1,3 @@
-import prod from '../../src/prod.js'
+import { app } from '../../src/index.js'
 
-export default prod
+export default app
